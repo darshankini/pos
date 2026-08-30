@@ -2,8 +2,12 @@
 
 # dependencies
 /node_modules
+/server/node_modules
 /.pnp
 .pnp.js
+
+# backend env (contains secrets)
+/server/.env
 
 # testing
 /coverage

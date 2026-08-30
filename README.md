@@ -1,70 +1,64 @@
-# Getting Started with Create React App
+# Restro POS — Restaurant Point of Sale
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A minimal full-stack POS for a small restaurant.
 
-## Available Scripts
+- **Frontend:** React 19 (CRA) + Tailwind CSS + React Router
+- **Backend:** Node.js + Express + MySQL (`mysql2`), JWT auth, bcrypt
+- **Database:** MySQL `pos` (XAMPP defaults: `root` / no password)
 
-In the project directory, you can run:
+## Features
 
-### `npm start`
+- **Login** (username / password, JWT).
+- **POS screen** — common header/footer; left **2/3** = scrollable category rail + product grid, right **1/3** = cart.
+  - Product tile: image, name, price, tap to add.
+  - Cart: image, name, qty +/−, line total, remove.
+  - **Checkout & Print** saves the order and prints a **58mm thermal receipt** via the browser/OS print dialog.
+- **Dashboard** — today's order count & sales, 7-day trend, and CRUD for **products** and **categories**.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Setup
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### 1. Database + backend
 
-### `npm test`
+```bash
+cd server
+npm install
+npm run migrate   # creates the `pos` database + tables
+npm run seed      # creates admin user + sample products
+npm start         # API on http://localhost:5000
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+DB credentials live in `server/.env` (defaults match XAMPP: host `localhost`, user `root`, empty password).
 
-### `npm run build`
+### 2. Frontend
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```bash
+npm install
+npm start         # app on http://localhost:3000
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Default login
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```
+username: admin
+password: admin123
+```
 
-### `npm run eject`
+## API (base `/api`)
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+| Method | Path | Auth | Purpose |
+|---|---|---|---|
+| POST | `/auth/login` | – | Login, returns JWT |
+| GET | `/categories` | – | List categories |
+| POST/PUT/DELETE | `/categories[/:id]` | ✔ | Category CRUD |
+| GET | `/products?category=:id` | – | List products |
+| POST/PUT/DELETE | `/products[/:id]` | ✔ | Product CRUD |
+| POST | `/orders` | – | Create order (checkout) |
+| GET | `/dashboard` | ✔ | Today's stats + 7-day trend |
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Thermal printing
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+The receipt component is hidden on screen and revealed only for printing (see
+`src/index.css` → `.receipt-print` / `@media print`, sized `58mm`). "Checkout &
+Print" calls `window.print()`; set your thermal printer as the print target
+(or default printer) in the browser/OS dialog. Change `58mm` to `80mm` in
+`index.css` for wider rolls.

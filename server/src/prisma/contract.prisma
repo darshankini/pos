@@ -1,0 +1,59 @@
+// use prisma-next
+// Contract inferred from the live database schema. Edit as needed, then run `prisma contract emit`.
+
+model Categories {
+  id        Int          @id(map: "categories_pkey") @default(autoincrement())
+  name      VarChar(100) @unique(map: "categories_name_key")
+  createdAt Timestamptz? @default(now()) @map("created_at")
+  products  Products[]
+
+  @@map("categories")
+}
+
+model Orders {
+  id         Int            @id(map: "orders_pkey") @default(autoincrement())
+  total      Numeric(10, 2) @default(0)
+  itemCount  Int            @default(0) @map("item_count")
+  createdAt  Timestamptz?   @default(now()) @map("created_at")
+  orderItems OrderItems[]
+
+  @@index([createdAt], map: "idx_orders_created")
+  @@map("orders")
+}
+
+model OrderItems {
+  id        Int            @id(map: "order_items_pkey") @default(autoincrement())
+  orderId   Int            @map("order_id")
+  productId Int?           @map("product_id")
+  name      VarChar(150)
+  price     Numeric(10, 2)
+  qty       Int
+  order     Orders         @relation(fields: [orderId], references: [id], onDelete: Cascade, map: "order_items_order_id_fkey")
+
+  @@index([orderId], map: "idx_items_order")
+  @@map("order_items")
+}
+
+model Products {
+  id         Int            @id(map: "products_pkey") @default(autoincrement())
+  categoryId Int?           @map("category_id")
+  name       VarChar(150)
+  price      Numeric(10, 2) @default(0)
+  image      VarChar(255)?
+  isActive   SmallInt       @default(1) @map("is_active")
+  createdAt  Timestamptz?   @default(now()) @map("created_at")
+  category   Categories?    @relation(fields: [categoryId], references: [id], onDelete: SetNull, map: "products_category_id_fkey")
+
+  @@index([categoryId], map: "idx_products_category")
+  @@map("products")
+}
+
+model Users {
+  id        Int           @id(map: "users_pkey") @default(autoincrement())
+  username  VarChar(50)   @unique(map: "users_username_key")
+  password  VarChar(255)
+  name      VarChar(100)?
+  createdAt Timestamptz?  @default(now()) @map("created_at")
+
+  @@map("users")
+}

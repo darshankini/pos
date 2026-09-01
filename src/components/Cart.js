@@ -5,7 +5,7 @@ import { money } from './Layout';
 import CartItem from './CartItem';
 import Receipt from './Receipt';
 
-export default function Cart() {
+export default function Cart({ onClose }) {
   const { items, inc, dec, remove, clear, total, count } = useCart();
   const [busy, setBusy] = useState(false);
   const [printData, setPrintData] = useState(null); // { order, items } snapshot for receipt
@@ -34,7 +34,18 @@ export default function Cart() {
     <section className="w-full h-full flex flex-col bg-white border-l">
       <div className="h-12 shrink-0 px-4 flex items-center justify-between border-b">
         <h2 className="font-semibold">Current Order</h2>
-        <span className="text-sm text-gray-500">{count} item{count !== 1 ? 's' : ''}</span>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-gray-500">{count} item{count !== 1 ? 's' : ''}</span>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="md:hidden text-gray-500 hover:text-gray-800 text-xl leading-none"
+              aria-label="Close cart"
+            >
+              ✕
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Scrollable line items */}

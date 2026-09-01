@@ -24,7 +24,7 @@ function ProductCard({ product,qty, onAdd,onDec,onInc }) {
         <div className="text-sm font-medium leading-tight line-clamp-2 min-h-[2.5rem]">{product.name}</div>
         <div className="mt-1 flex items-center justify-between">
           <span className="text-brand font-semibold">{money(product.price)}</span>
-          <span className="text-xs text-white rounded px-1.5 py-0.5 opacity-0 group-hover:opacity-100 transition">
+          <span className="text-xs text-white rounded px-1.5 py-0.5 transition">
             {qty > 0 ? (
             <div className="inline-flex items-center rounded-full text-white overflow-hidden">
               <button onClick={() => onDec(product.id)} className="h-6 w-6 rounded bg-brand hover:bg-brand-300 leading-none">−</button>

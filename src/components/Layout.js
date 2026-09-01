@@ -12,8 +12,10 @@ function Header() {
     (isActive ? 'bg-white text-brand' : 'text-white/90 hover:bg-white/10');
 
   return (
-    <header className="h-14 shrink-0 bg-brand text-white flex items-center px-4 gap-4 shadow">
-      <Link to="/" className="text-lg font-bold tracking-tight">🍽️ Restro POS</Link>
+    <header className="h-14 shrink-0 bg-brand text-white flex items-center px-3 sm:px-4 gap-2 sm:gap-4 shadow">
+      <Link to="/" className="text-lg font-bold tracking-tight whitespace-nowrap">
+        🍽️<span className="hidden sm:inline"> Restro POS</span>
+      </Link>
       <nav className="flex gap-1">
         <NavLink to="/" end className={linkCls}>POS</NavLink>
         <NavLink to="/dashboard" className={linkCls}>Dashboard</NavLink>

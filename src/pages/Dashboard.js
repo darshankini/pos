@@ -21,6 +21,8 @@ export default function Dashboard() {
     api.get('/dashboard').then(setStats).catch((e) => console.error(e));
   }, []);
 
+  console.log(stats);
+
   const maxSales = stats ? Math.max(1, ...stats.trend.map((d) => Number(d.sales))) : 1;
 
   return (

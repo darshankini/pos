@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { api } from '../../api';
 import { money } from '../../components/Layout';
+import toast from "react-hot-toast";
 
 const EMPTY = { name: '', price: '', category_id: '', image: '' };
 
@@ -9,6 +10,7 @@ export default function ProductsAdmin() {
   const [cats, setCats] = useState([]);
   const [form, setForm] = useState(EMPTY);
   const [editingId, setEditingId] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   const load = useCallback(() => {
     Promise.all([api.get('/products'), api.get('/categories')])
@@ -20,6 +22,25 @@ export default function ProductsAdmin() {
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
   const reset = () => { setForm(EMPTY); setEditingId(null); };
 
+  // Upload the chosen file, then keep the returned URL on the form (image stays optional).
+  const onPickImage = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // let the same file be re-selected later
+    if (!file) return;
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('image', file);
+      const { url } = await api.upload('/products/upload', fd);
+      setForm((f) => ({ ...f, image: url }));
+      toast.success('Image uploaded');
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const save = async (e) => {
     e.preventDefault();
     if (!form.name.trim() || form.price === '') return;
@@ -30,8 +51,17 @@ export default function ProductsAdmin() {
       image: form.image || null,
     };
     try {
-      if (editingId) await api.put(`/products/${editingId}`, body);
-      else await api.post('/products', body);
+      if (editingId){
+        await api.put(`/products/${editingId}`, body);
+        toast.success("Product updated successfully!",{
+          position: "top-center"
+        });
+      }else{
+        await api.post('/products', body);
+        toast.success("Product added successfully!",{
+          position: "top-center"
+        });
+      }
       reset(); load();
     } catch (err) { alert(err.message); }
   };
@@ -52,15 +82,40 @@ export default function ProductsAdmin() {
     <div className="bg-white rounded-lg shadow p-4">
       <h3 className="font-semibold mb-3">Products</h3>
       <form onSubmit={save} className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4">
-        <input className={input} placeholder="Name" value={form.name} onChange={set('name')} />
-        <input className={input} placeholder="Price" type="number" step="0.01" value={form.price} onChange={set('price')} />
+        <input className={input} placeholder="Name" value={form.name} onChange={set('name')} required />
+        <input className={input} placeholder="Price" type="number" step="0.01" min="0" value={form.price} onChange={set('price')} required />
         <select className={input} value={form.category_id} onChange={set('category_id')}>
           <option value="">No category</option>
           {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
-        <input className={input} placeholder="Image URL" value={form.image} onChange={set('image')} />
+        <div className="col-span-2 md:col-span-1 flex items-center gap-2 min-w-0">
+          <label
+            className={
+              input +
+              ' cursor-pointer bg-gray-50 hover:bg-gray-100 whitespace-nowrap ' +
+              (uploading ? 'opacity-60 pointer-events-none' : '')
+            }
+          >
+            {uploading ? 'Uploading…' : form.image ? 'Change' : 'Image'}
+            <input type="file" accept="image/*" className="hidden" onChange={onPickImage} />
+          </label>
+          {form.image && !uploading && (
+            <>
+              <img src={form.image} alt="" className="h-8 w-8 rounded object-cover shrink-0" />
+              <button
+                type="button"
+                onClick={() => setForm((f) => ({ ...f, image: '' }))}
+                className="text-gray-400 hover:text-red-500 shrink-0"
+                title="Remove image"
+                aria-label="Remove image"
+              >
+                ✕
+              </button>
+            </>
+          )}
+        </div>
         <div className="flex gap-2">
-          <button className="flex-1 px-3 py-1.5 rounded-md bg-brand text-white text-sm">{editingId ? 'Update' : 'Add'}</button>
+          <button disabled={uploading} className="flex-1 px-3 py-1.5 rounded-md bg-brand text-white text-sm disabled:opacity-50">{editingId ? 'Update' : 'Add'}</button>
           {editingId && <button type="button" onClick={reset} className="px-3 py-1.5 rounded-md bg-gray-200 text-sm">Cancel</button>}
         </div>
       </form>

@@ -4,12 +4,26 @@ import { api } from '../api';
 import { money } from './Layout';
 import CartItem from './CartItem';
 import Receipt from './Receipt';
+import CustomerModal from './CustomerModal';
 
 export default function Cart({ onClose }) {
-  const { items, inc, dec, remove, clear, total, count } = useCart();
+  const {
+    items, inc, dec, remove, clear, total, count,
+    sessions, activeId, addSession, selectSession, clearSessions,
+  } = useCart();
   const [busy, setBusy] = useState(false);
-  const [printData, setPrintData] = useState(null); // { order, items } snapshot for receipt
+  const [saving, setSaving] = useState(false);
+  const [pending, setPending] = useState(null); // { order, items, total } awaiting customer modal
+  const [printData, setPrintData] = useState(null); // { order, items, customer } snapshot for receipt
 
+  // Clearing every cart is destructive, so confirm when there's anything to lose.
+  const handleClearSessions = useCallback(() => {
+    const hasStuff = sessions.length > 1 || sessions.some((s) => s.count > 0);
+    if (hasStuff && !window.confirm('Clear all carts? This removes every cart session.')) return;
+    clearSessions();
+  }, [sessions, clearSessions]);
+
+  // Step 1: create + save the order, then open the customer modal (order is saved either way).
   const checkout = useCallback(async () => {
     if (!items.length || busy) return;
     setBusy(true);
@@ -17,21 +31,97 @@ export default function Cart({ onClose }) {
       const order = await api.post('/orders', {
         items: items.map(({ id, name, price, qty }) => ({ id, name, price, qty })),
       });
-      // Snapshot for the receipt, then print and clear.
-      setPrintData({ order, items: items.slice() });
-      setTimeout(() => {
-        window.print();
-        clear();
-      }, 50);
+      setPending({ order, items: items.slice(), total });
     } catch (e) {
       alert('Checkout failed: ' + e.message);
     } finally {
       setBusy(false);
     }
-  }, [items, busy, clear]);
+  }, [items, busy, total]);
+
+  // Print the pending order (optionally with customer details), then clear the cart.
+  const finishAndPrint = useCallback(
+    (customer) => {
+      const { order, items: snapshot } = pending;
+      setPrintData({ order, items: snapshot, customer });
+      setPending(null);
+      setTimeout(() => {
+        window.print();
+        clear();
+      }, 50);
+    },
+    [pending, clear]
+  );
+
+  // Step 2a: customer skipped — just print.
+  const skipCustomer = useCallback(() => finishAndPrint(null), [finishAndPrint]);
+
+  // Step 2b: customer gave details — save them against the order, then print.
+  const saveCustomer = useCallback(
+    async (customer) => {
+      setSaving(true);
+      try {
+        await api.post(`/orders/${pending.order.id}/customer`, customer);
+      } catch (e) {
+        // Order is already saved; warn but still print the receipt.
+        alert('Could not save customer details: ' + e.message);
+      } finally {
+        setSaving(false);
+      }
+      finishAndPrint(customer);
+    },
+    [pending, finishAndPrint]
+  );
 
   return (
     <section className="w-full h-full flex flex-col bg-white border-l">
+      {/* Cart sessions: horizontally scrollable tabs + add / clear-all controls */}
+      <div className="shrink-0 flex items-center gap-1 border-b px-2 py-1.5">
+        <div className="flex-1 min-w-0 flex gap-1 overflow-x-auto">
+          {sessions.map((s) => (
+            <button
+              key={s.id}
+              onClick={() => selectSession(s.id)}
+              className={
+                'shrink-0 px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition ' +
+                (s.id === activeId ? 'bg-brand text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
+              }
+            >
+              {s.label}
+              {s.count > 0 && (
+                <span
+                  className={
+                    'ml-1.5 rounded-full px-1.5 text-xs tabular-nums ' +
+                    (s.id === activeId ? 'bg-white/25' : 'bg-gray-300 text-gray-700')
+                  }
+                >
+                  {s.count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={addSession}
+          title="New cart"
+          aria-label="New cart"
+          className="shrink-0 h-8 w-8 grid place-items-center rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 text-xl leading-none"
+        >
+          +
+        </button>
+        <button
+          onClick={handleClearSessions}
+          title="Clear all carts"
+          aria-label="Clear all carts"
+          className="shrink-0 h-8 w-8 grid place-items-center rounded-md text-red-500 hover:bg-red-50"
+        >
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6" />
+            <path d="M10 11v6M14 11v6" />
+          </svg>
+        </button>
+      </div>
+
       <div className="h-12 shrink-0 px-4 flex items-center justify-between border-b">
         <h2 className="font-semibold">Current Order</h2>
         <div className="flex items-center gap-3">
@@ -87,8 +177,21 @@ export default function Cart({ onClose }) {
         </div>
       </div>
 
+      {/* Post-checkout: ask for optional customer details before printing */}
+      {pending && (
+        <CustomerModal
+          order={pending.order}
+          total={pending.total}
+          saving={saving}
+          onSkip={skipCustomer}
+          onSubmit={saveCustomer}
+        />
+      )}
+
       {/* Rendered off-screen; visible only during print */}
-      {printData && <Receipt order={printData.order} items={printData.items} />}
+      {printData && (
+        <Receipt order={printData.order} items={printData.items} customer={printData.customer} />
+      )}
     </section>
   );
 }

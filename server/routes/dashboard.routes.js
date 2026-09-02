@@ -3,6 +3,8 @@ const router = require('express').Router();
 const pool = require('../db');
 const { requireAuth } = require('../auth');
 
+
+
 router.use(requireAuth);
 
 // GET /api/dashboard
@@ -29,14 +31,16 @@ router.get('/', async (_req, res) => {
      ORDER BY day`
   );
 
-  const today = todayResult.rows[0];
+  
+
+  const today = todayResult[0][0];
 
   res.json({
     today: {
       orders: today.orders,
       sales: today.sales
     },
-    trend: trendResult.rows
+    trend: trendResult[0]
   });
 });
 

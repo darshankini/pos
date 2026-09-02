@@ -48,6 +48,41 @@ CREATE TABLE IF NOT EXISTS order_items (
 );
 CREATE INDEX IF NOT EXISTS idx_items_order ON order_items(order_id);
 
+--Cart
+CREATE TABLE IF NOT EXISTS cart(
+  id        SERIAL PRIMARY KEY,
+  cart_id   VARCHAR(150) NOT NULL,
+  cart_total NUMERIC(10,2) NOT NULL DEFAULT 0,
+  item_count INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- cart Item
+CREATE TABLE IF NOT EXISTS cart_items(
+  id        SERIAL PRIMARY KEY,
+  cart_id   INT NOT NULL,
+  product_id   INT NOT NULL,
+  price     NUMERIC(10,2) NOT NULL,
+  qty       INT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW() 
+);
+CREATE INDEX IF NOT EXISTS idx_cart_items ON cart_items(cart_id);
+
+--customer
+CREATE TABLE IF NOT EXISTS customers(
+  id      SERIAL PRIMARY KEY,
+  order_id INT NOT NULL,
+  customer_name VARCHAR(150) NULL,
+  customer_mobile BIGINT NULL,
+  customer_email VARCHAR(150),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+
+  CONSTRAINT customer_mobile_valid
+    CHECK (customer_mobile IS NULL or
+           customer_mobile BETWEEN  1000000000 AND 9999999999)
+);
+CREATE INDEX IF NOT EXISTS idx_customers ON customers(id);
+
 -- Seed categories (admin user + products come from `npm run seed`).
 INSERT INTO categories (name) VALUES
   ('Starters'), ('Main Course'), ('Beverages'), ('Desserts')

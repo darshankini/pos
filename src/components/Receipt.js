@@ -2,7 +2,8 @@ import { money } from './Layout';
 
 // Hidden on screen; shown only when printing (see .receipt-print in index.css).
 // Sized for a 58mm thermal roll.
-export default function Receipt({ order, items }) {
+export default function Receipt({ order, items, customer }) {
+  const hasCustomer = customer && (customer.name || customer.mobile || customer.email);
   return (
     <div className="receipt-print">
       <div style={{ textAlign: 'center' }}>
@@ -14,6 +15,14 @@ export default function Receipt({ order, items }) {
         Order #: {order?.id ?? '—'}<br />
         {new Date(order?.created_at || Date.now()).toLocaleString()}
       </div>
+      {hasCustomer && (
+        <div>
+          --------------------------------<br />
+          {customer.name && <>Name: {customer.name}<br /></>}
+          {customer.mobile && <>Mobile: {customer.mobile}<br /></>}
+          {customer.email && <>Email: {customer.email}<br /></>}
+        </div>
+      )}
       <div>--------------------------------</div>
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <tbody>

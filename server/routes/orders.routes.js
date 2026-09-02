@@ -38,6 +38,7 @@ router.post('/', async (req, res) => {
       [total, itemCount]
     );
 
+    console.log(orderResult);
     const order = orderResult.rows[0];
 
     // Create order items
@@ -90,6 +91,46 @@ router.post('/', async (req, res) => {
 
   } finally {
     client.release();
+  }
+});
+
+// POST /api/orders/:id/customer
+// { name?, mobile?, email? } — optional customer details attached to an existing order.
+// The order is already saved at checkout; this only adds contact info if the customer gives it.
+router.post('/:id/customer', async (req, res) => {
+  const orderId = Number(req.params.id);
+  if (!Number.isInteger(orderId) || orderId <= 0) {
+    return res.status(400).json({ error: 'invalid order id' });
+  }
+
+  let { name, mobile, email } = req.body || {};
+  name = (typeof name === 'string' && name.trim()) || null;
+  email = (typeof email === 'string' && email.trim()) || null;
+
+  // Mobile: optional; if provided it must be exactly 10 digits (matches the DB CHECK).
+  let mobileNum = null;
+  const rawMobile = mobile == null ? '' : String(mobile).replace(/\D/g, '');
+  if (rawMobile) {
+    if (rawMobile.length !== 10) {
+      return res.status(400).json({ error: 'mobile must be 10 digits' });
+    }
+    mobileNum = Number(rawMobile);
+  }
+
+  try {
+    // Make sure the order exists before linking a customer to it.
+    const [orders] = await db.query('SELECT id FROM orders WHERE id = ?', [orderId]);
+    if (!orders.length) return res.status(404).json({ error: 'order not found' });
+
+    const [rows] = await db.query(
+      `INSERT INTO customers (order_id, customer_name, customer_mobile, customer_email)
+       VALUES (?, ?, ?, ?) RETURNING id`,
+      [orderId, name, mobileNum, email]
+    );
+    res.status(201).json({ id: rows[0].id, order_id: orderId });
+  } catch (error) {
+    console.error('Attach customer failed:', error);
+    res.status(500).json({ error: error.message || 'Failed to save customer' });
   }
 });
 

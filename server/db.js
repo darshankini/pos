@@ -1,20 +1,26 @@
 const { Pool, types } = require('pg');
 require('dotenv').config();
 
-// --- Type parsers: make Postgres return JS numbers like mysql2 did ---
-// NUMERIC/DECIMAL (oid 1700) -> float, so price/total are numbers not strings.
 types.setTypeParser(1700, (v) => (v === null ? null : parseFloat(v)));
 // BIGINT (oid 20, e.g. COUNT(*)) -> number.
 types.setTypeParser(20, (v) => (v === null ? null : parseInt(v, 10)));
 
+const connectionString = [
+  process.env.pos_DATABASE_URL,
+  process.env.pos_POSTGRES_URL,
+  process.env.pos_PRISMA_DATABASE_URL
+].find((u) => u && /^postgres(ql)?:\/\//.test(u));
+
+if (!connectionString) {
+  throw new Error(
+    'No Postgres connection string found. Set DATABASE_URL (or pos_POSTGRES_URL) ' +
+    'to a postgres:// URL in your environment / Vercel project settings.'
+  );
+}
+
 // Single shared pool, reused across requests.
 const pool = new Pool({
-  // host: process.env.DB_HOST || 'localhost',
-  // port: Number(process.env.DB_PORT) || 5432,
-  // user: process.env.DB_USER || 'postgres',
-  // password: process.env.DB_PASSWORD || 'Darshan@1710',
-  // database: process.env.DB_NAME || 'pos',
-  connectionString: process.env.DATABASE_URL,
+  connectionString,
   max: 10,
 });
 

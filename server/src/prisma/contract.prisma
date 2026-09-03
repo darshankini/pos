@@ -57,3 +57,37 @@ model Users {
 
   @@map("users")
 }
+
+model Cart {
+  id        Int            @id(map: "cart_pkey") @default(autoincrement())
+  cartId    VarChar(150)   @map("cart_id")
+  cartTotal Numeric(10, 2) @default(0) @map("cart_total")
+  itemCount Int            @default(0) @map("item_count")
+  createdAt Timestamptz?   @default(now()) @map("created_at")
+
+  @@map("cart")
+}
+
+model CartItems {
+  id        Int            @id(map: "cart_items_pkey") @default(autoincrement())
+  cartId    Int            @map("cart_id")
+  productId Int            @map("product_id")
+  price     Numeric(10, 2)
+  qty       Int
+  createdAt Timestamptz?   @default(now()) @map("created_at")
+
+  @@index([cartId], map: "idx_cart_items")
+  @@map("cart_items")
+}
+
+model Customers {
+  id             Int           @id(map: "customers_pkey") @default(autoincrement())
+  orderId        Int           @map("order_id")
+  customerName   VarChar(150)? @map("customer_name")
+  customerMobile BigInt?       @map("customer_mobile")
+  customerEmail  VarChar(150)? @map("customer_email")
+  createdAt      Timestamptz?  @default(now()) @map("created_at")
+
+  @@index([id], map: "idx_customers")
+  @@map("customers")
+}

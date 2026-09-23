@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { api } from '../../api';
 import { money,formattedDate } from '../../components/Layout';
-import toast from "react-hot-toast";
 
 //const EMPTY = { name: '', price: '', category_id: '', image: '' };
 

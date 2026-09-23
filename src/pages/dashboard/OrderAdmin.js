@@ -3,7 +3,7 @@ import { api } from '../../api';
 import { money,formattedDate } from '../../components/Layout';
 import toast from "react-hot-toast";
 
-const EMPTY = { name: '', price: '', category_id: '', image: '' };
+//const EMPTY = { name: '', price: '', category_id: '', image: '' };
 
 export default function OrderAdmin({isOrderPreview}) {
   const [rows, setRows] = useState([]);
@@ -53,7 +53,7 @@ export default function OrderAdmin({isOrderPreview}) {
                 <td className="px-3 text-center tabular-nums">{money(p.total)}</td>
                 <td className="px-3 text-center tabular-nums">{formattedDate(p.created_at)}</td>
                 <td className="px-3 text-center">
-                    <a href="#" onClick={() => isOrderPreview(p.id)}>Preview</a>
+                    <button onClick={() => isOrderPreview(p.id)} className='bg-orange-600 rounded-md text-sm p-1 text-white'>Preview</button>
                 </td>
               </tr>
             ))}

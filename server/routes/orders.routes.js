@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const { error } = require('node:console');
 const db = require('../db');
 
 // POST /api/orders
@@ -38,7 +39,7 @@ router.post('/', async (req, res) => {
       [total, itemCount]
     );
 
-    console.log(orderResult);
+    
     const order = orderResult.rows[0];
 
     // Create order items
@@ -133,5 +134,32 @@ router.post('/:id/customer', async (req, res) => {
     res.status(500).json({ error: error.message || 'Failed to save customer' });
   }
 });
+
+router.get('/',async(req,res) => {
+  try{
+    const [orderData] = await db.query('SELECT * FROM orders');
+    if(!orderData.length) return res.status(404).json({error: 'Orders not found'});
+    return res.status(200).json(orderData);
+  }catch(error){
+    console.error('Something went wrong',error);
+    res.status(500).json({error:error.message || 'No orders available'});
+  }
+})
+
+router.get('/getOrderDetails/:id',async(req,res) =>{
+  try{
+    const orderId = req.params.id;
+    const [orderDetails] = await db.query('SELECT * FROM orders WHERE id = ?',[orderId]);
+    if(!orderDetails.length) return res.status(200).json({message : 'No record found'});
+
+    const [items] = await db.query('SELECT * FROM order_items WHERE order_id = ?',[orderId]);
+    const [customer] = await db.query('SELECT * FROM customers WHERE order_id = ?',[orderId]);
+    return res.status(200).json({order:orderDetails[0],items:items,customer:customer[0]});
+
+  }catch(error){
+    console.error('Something went wrong',error);
+    res.status(500).json({error:error.message || 'Order not found'});
+  }
+})
 
 module.exports = router;

@@ -5,10 +5,14 @@ types.setTypeParser(1700, (v) => (v === null ? null : parseFloat(v)));
 // BIGINT (oid 20, e.g. COUNT(*)) -> number.
 types.setTypeParser(20, (v) => (v === null ? null : parseInt(v, 10)));
 
+
 const connectionString = [
+  process.env.DATABASE_URL,
   process.env.pos_DATABASE_URL,
   process.env.pos_POSTGRES_URL,
-  process.env.pos_PRISMA_DATABASE_URL
+  process.env.POSTGRES_URL,
+  process.env.pos_PRISMA_DATABASE_URL,
+  process.env.PRISMA_DATABASE_URL,
 ].find((u) => u && /^postgres(ql)?:\/\//.test(u));
 
 if (!connectionString) {

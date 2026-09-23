@@ -3,6 +3,8 @@ import { api } from '../api';
 import { money } from '../components/Layout';
 import ProductsAdmin from './dashboard/ProductsAdmin';
 import CategoriesAdmin from './dashboard/CategoriesAdmin';
+import OrderAdmin from './dashboard/OrderAdmin';
+import OrderPreview from './dashboard/OrderPreview';
 
 function Stat({ label, value, hint }) {
   return (
@@ -16,14 +18,30 @@ function Stat({ label, value, hint }) {
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
+  const [isPreview,setIsPreview] = useState(null);
+  const [orderDetails,setOrderDetails] = useState(null);
 
   useEffect(() => {
     api.get('/dashboard').then(setStats).catch((e) => console.error(e));
   }, []);
 
-  console.log(stats);
-
   const maxSales = stats ? Math.max(1, ...stats.trend.map((d) => Number(d.sales))) : 1;
+
+  const onClose = () => {
+    setIsPreview(false);
+  }
+
+  const isOrderPreview = async (id) => {
+    
+    console.log(id);
+    try{
+      const orderDetails = await api.get(`/orders/getOrderDetails/${id}`);
+      setOrderDetails(orderDetails);
+      setIsPreview(true);
+    }catch(error){
+      console.error('error',error);
+    }
+  }
 
   return (
     <div className="h-full overflow-y-auto bg-gray-100 p-4 md:p-6 space-y-6">
@@ -63,9 +81,23 @@ export default function Dashboard() {
 
       {/* CRUD */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2"><ProductsAdmin /></div>
-        <div><CategoriesAdmin /></div>
+        <div className="lg:col-span-2">
+          <ProductsAdmin />
+        </div>
+        <div className="lg:col-span-2">
+          <OrderAdmin
+          isOrderPreview={isOrderPreview}/>
+        </div>
+        <div>
+          <CategoriesAdmin />
+        </div>
       </div>
+
+      {isPreview && (
+        <OrderPreview
+        orderDetails={orderDetails}
+        onClose={onClose}/>
+      )}
     </div>
   );
 }

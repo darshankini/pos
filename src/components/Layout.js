@@ -2,7 +2,8 @@ import { Link, NavLink, Outlet, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 
-export const money = (n) => '₹' + Number(n).toFixed(2);
+export const money = (n) => '₹ ' + Number(n).toFixed(2);
+export const formattedDate = (n) => new Date(n).toLocaleString();
 
 function Header() {
   const { user, logout } = useAuth();

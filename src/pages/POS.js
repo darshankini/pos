@@ -25,6 +25,7 @@ export default function POS() {
       .finally(() => setLoading(false));
   }, []);
 
+
   // Filter client-side so switching category is instant (no refetch).
   const visible = useMemo(
     () => (active === 'all' ? products : products.filter((p) => p.category_id === active)),

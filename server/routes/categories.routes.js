@@ -27,7 +27,7 @@ router.post('/', async (req, res) => {
   );
 
   res.status(201).json({
-    id: result.rows[0].id,
+    id: result[0][0].id,
     name
   });
 });

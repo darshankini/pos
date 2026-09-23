@@ -31,8 +31,6 @@ router.get('/', async (_req, res) => {
      ORDER BY day`
   );
 
-  
-
   const today = todayResult[0][0];
 
   res.json({

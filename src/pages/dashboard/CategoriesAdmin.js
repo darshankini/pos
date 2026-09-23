@@ -43,17 +43,27 @@ export default function CategoriesAdmin({ onChange }) {
           </button>
         )}
       </form>
-      <ul className="divide-y text-sm">
-        {rows.map((c) => (
-          <li key={c.id} className="flex items-center justify-between py-2">
-            <span>{c.name}</span>
-            <span className="flex gap-2">
-              <button onClick={() => { setEditing(c); setName(c.name); }} className="text-brand hover:underline">Edit</button>
-              <button onClick={() => del(c.id)} className="text-red-500 hover:underline">Delete</button>
-            </span>
-          </li>
-        ))}
-      </ul>
+      <div className="overflow-x-auto">
+        <table className="w-full table-fixed text-sm">
+          <thead className="text-left text-gray-500 border-b">
+            <tr>
+              <th className="w-1/2 py-2">Category</th>
+              <th className="w-1/2 text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {rows.map((c) => (
+              <tr key={c.id}>
+                <td className="w-1/2 py-2 break-words">{c.name}</td>
+                <td className="w-1/2 text-center whitespace-nowrap">
+                  <button onClick={() => { setEditing(c); setName(c.name); }} className="hover:underline mr-3 bg-orange-600 hover:bg-orange-500 rounded-md text-white p-1">Edit</button>
+                  <button onClick={() => del(c.id)} className="text-white hover:underline bg-red-600 hover:bg-red-500 rounded-md p-1 text-sm ">Delete</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

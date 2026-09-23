@@ -123,20 +123,21 @@ export default function ProductsAdmin() {
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="text-left text-gray-500 border-b">
-            <tr><th className="py-2">Item</th><th>Category</th><th className="text-right">Price</th><th></th></tr>
+            <tr><th className="px-3 py-2 text-center">Image</th><th className="px-3 py-2 text-center">Item</th><th class="px-3 text-center">Category</th><th className="px-3 text-center">Price</th><th className='px-3 text-center'>Action</th></tr>
           </thead>
           <tbody className="divide-y">
             {rows.map((p) => (
               <tr key={p.id}>
-                <td className="py-2 flex items-center gap-2">
-                  {p.image && <img src={p.image} alt="" className="h-8 w-8 rounded object-cover" />}
-                  {p.name}
+                <td className="px-3 py-2 flex items-center gap-2 justify-center">
+                  {p.image && <img src={p.image} alt="" className="h-8 w-8 rounded object-cover items-center" />}
+                  
                 </td>
-                <td className="text-gray-500">{p.category || '—'}</td>
-                <td className="text-right tabular-nums">{money(p.price)}</td>
-                <td className="text-right whitespace-nowrap">
-                  <button onClick={() => edit(p)} className="text-brand hover:underline mr-3">Edit</button>
-                  <button onClick={() => del(p.id)} className="text-red-500 hover:underline">Delete</button>
+                <td className="px-3 text-center">{p.name}</td>
+                <td className="px-3 text-center text-gray-500">{p.category || '—'}</td>
+                <td className="px-3 text-center tabular-nums">{money(p.price)}</td>
+                <td className="px-3 text-center whitespace-nowrap">
+                  <button onClick={() => edit(p)} className="text-center hover:underline mr-3 rounded-md text-white bg-orange-600 hover:bg-orange-500 p-1">Edit</button>
+                  <button onClick={() => del(p.id)} className="text-center hover:underline rounded-md text-white bg-red-600 hover:bg-red-500 p-1">Delete</button>
                 </td>
               </tr>
             ))}

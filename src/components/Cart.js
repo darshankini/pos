@@ -1,20 +1,27 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { api } from '../api';
 import { money } from './Layout';
 import CartItem from './CartItem';
 import Receipt from './Receipt';
 import CustomerModal from './CustomerModal';
+import Kot from './Kot';
 
 export default function Cart({ onClose }) {
   const {
     items, inc, dec, remove, clear, total, count,
-    sessions, activeId, addSession, selectSession, clearSessions,
+    sessions, activeId, addSession, selectSession, clearSessions,kot
   } = useCart();
   const [busy, setBusy] = useState(false);
   const [saving, setSaving] = useState(false);
   const [pending, setPending] = useState(null); // { order, items, total } awaiting customer modal
   const [printData, setPrintData] = useState(null); // { order, items, customer } snapshot for receipt
+  const [kotData,setKotData] = useState(null);
+  const [kotPrint,setKotPrint] = useState(null);
+  const [kotPrintEnabled,setKotEnabled] = useState(true);
+
+  
+  const kotItems = items.filter((i) => i.kotQty > 0);
 
   // Clearing every cart is destructive, so confirm when there's anything to lose.
   const handleClearSessions = useCallback(() => {
@@ -72,6 +79,24 @@ export default function Cart({ onClose }) {
     },
     [pending, finishAndPrint]
   );
+
+  const printKot = useCallback(()=>{
+    setKotData(kotItems);
+    setKotPrint(!kotPrint);
+  },[kotItems,kotPrint]);
+
+
+  useEffect(()=>{
+      setKotEnabled(kotItems.length > 0);
+  },[kotItems]);
+
+  const cancelOrder = useCallback((id) => {
+    if(!kotPrintEnabled){ 
+      alert('KOT is generated. Cant cancel the order'); 
+      return;
+    }
+    dec(id);
+  },[dec,kotPrintEnabled]);
 
   return (
     <section className="w-full h-full flex flex-col bg-white border-l">
@@ -147,7 +172,7 @@ export default function Cart({ onClose }) {
         ) : (
           <ul className="divide-y">
             {items.map((i) => (
-              <CartItem key={i.id} item={i} onInc={inc} onDec={dec} onRemove={remove} />
+              <CartItem key={i.id} item={i} onInc={inc} onDec={cancelOrder} onRemove={remove}/>
             ))}
           </ul>
         )}
@@ -159,13 +184,21 @@ export default function Cart({ onClose }) {
           <span>Total</span>
           <span className="text-brand tabular-nums">{money(total)}</span>
         </div>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <button
             onClick={clear}
             disabled={!items.length}
             className="col-span-1 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-sm font-medium disabled:opacity-40"
           >
             Clear
+          </button>
+          <button
+            onClick={printKot}
+            disabled={!kotPrintEnabled}
+            className="col-span-1 py-2 rounded-md bg-green-200 hover:bg-green-300 text-sm font-medium disabled:opacity-40"
+            
+          >
+            KOT Print
           </button>
           <button
             onClick={checkout}
@@ -191,6 +224,20 @@ export default function Cart({ onClose }) {
       {/* Rendered off-screen; visible only during print */}
       {printData && (
         <Receipt order={printData.order} items={printData.items} customer={printData.customer} />
+      )}
+
+      {kotPrint && (
+        
+        <Kot kotData={kotData}
+        onClose={() => {
+          setKotData(null);
+          setKotPrint(false);
+        }}
+        onPrint={() => {
+          window.print();
+          setKotData(null);
+          kot()
+        }}/>
       )}
     </section>
   );

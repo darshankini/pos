@@ -74,6 +74,7 @@ model CartItems {
   productId Int            @map("product_id")
   price     Numeric(10, 2)
   qty       Int
+  kotQty    Int            @default(0) @map("kot_qty")
   createdAt Timestamptz?   @default(now()) @map("created_at")
 
   @@index([cartId], map: "idx_cart_items")
@@ -90,4 +91,18 @@ model Customers {
 
   @@index([id], map: "idx_customers")
   @@map("customers")
+}
+
+model Payment {
+  id        Int      @id @default(autoincrement())
+  orderId   Int      @map("order_id")
+  amount    Numeric(10, 2)
+  cash      Numeric(10, 2) @default(0)
+  online    Numeric(10, 2) @default(0)
+  status    String   @default("PENDING")
+  createdAt Timestamptz?  @default(now()) @map("created_at")
+
+  order     Orders    @relation(fields: [orderId], references: [id])
+
+  @@map("payment")
 }

@@ -5,6 +5,7 @@ import { money } from '../components/Layout';
 import CategoryList from '../components/CategoryList';
 import ProductList from '../components/ProductList';
 import Cart from '../components/Cart';
+import ErrorBoundary from '../components/ErrorBoundary';
 
 export default function POS() {
   const { add, total, count } = useCart();
@@ -40,7 +41,9 @@ export default function POS() {
       <div className="flex-1 min-h-0 min-w-0 flex flex-col md:flex-row md:basis-2/3 md:grow">
         <CategoryList categories={categories} active={active} onSelect={setActive} />
         <div className="flex-1 min-h-0 min-w-0 overflow-y-auto">
+          <ErrorBoundary>
           <ProductList products={visible} loading={loading} onAdd={handleAdd} />
+          </ErrorBoundary>
         </div>
       </div>
 

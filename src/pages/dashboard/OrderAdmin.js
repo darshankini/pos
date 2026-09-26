@@ -29,6 +29,28 @@ export default function OrderAdmin({isOrderPreview}) {
     setCurrentPage(page);
   }
 
+  const maxVisiblePages = 5;
+
+  let startPage = Math.max(
+    1,
+    currentPage - Math.floor(maxVisiblePages / 2)
+  );
+
+  let endPage = startPage + maxVisiblePages - 1;
+
+  if (endPage > totalPages) {
+    endPage = totalPages;
+    startPage = Math.max(
+      1,
+      endPage - maxVisiblePages + 1
+    );
+  }
+
+  const visiblePages = Array.from(
+    { length: endPage - startPage + 1 },
+    (_, index) => startPage + index
+  );
+
   return (
     <div className="bg-white rounded-lg shadow p-4">
       <h3 className="font-semibold mb-3">Order Details</h3>
@@ -80,32 +102,91 @@ export default function OrderAdmin({isOrderPreview}) {
 
             <div className='flex items-center gap-1'>
               {/* Previous */}
-              <button
-              onClick={()=>goToPage(currentPage - 1)}
-              disabled={currentPage === 1}
-              className='rounded-md border px-3 py-1.5 text-sm transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40'>
-                ←
-              </button>
+             
 
               {/* Page Numbers */}
-              {Array.from(
-                {length : totalPages},
-                (_,i) => i + 1
-              ).map((page) => (
-                <button
-                key={page}
-                onClick={()=>goToPage(page)}
-                className={`min-w-9 rounded-md- px-3 py-1.5 text-sm transition ${currentPage === page ? 'bg-gray-800 text-white' : 'border text-gray-600 hover:bg-gray-50'}`}>
-                  {page}
-                </button>
-              ))}
+              <div className="flex items-center gap-1">
 
-              {/* Next */} 
-              <button onClick={() => goToPage(currentPage + 1)} 
-              disabled={currentPage === totalPages} 
-              className="rounded-md border px-3 py-1.5 text-sm transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40" > 
-              → 
-              </button>
+                {/* Previous */}
+                <button
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="rounded-md border px-3 py-1.5 text-sm
+                            hover:bg-gray-50
+                            disabled:cursor-not-allowed
+                            disabled:opacity-40"
+                >
+                  ←
+                </button>
+
+                {/* First page */}
+                {startPage > 1 && (
+                  <>
+                    <button
+                      onClick={() => goToPage(1)}
+                      className="min-w-9 rounded-md border px-3 py-1.5 text-sm
+                                text-gray-600 hover:bg-gray-50"
+                    >
+                      1
+                    </button>
+
+                    {startPage > 2 && (
+                      <span className="px-2 text-gray-400">
+                        ...
+                      </span>
+                    )}
+                  </>
+                )}
+
+                {/* Visible pages */}
+                {visiblePages.map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => goToPage(page)}
+                    className={`min-w-9 rounded-md px-3 py-1.5 text-sm transition ${
+                      currentPage === page
+                        ? 'bg-gray-800 text-white'
+                        : 'border text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+
+                {/* Last page */}
+                {endPage < totalPages && (
+                  <>
+                    {endPage < totalPages - 1 && (
+                      <span className="px-2 text-gray-400">
+                        ...
+                      </span>
+                    )}
+
+                    <button
+                      onClick={() => goToPage(totalPages)}
+                      className="min-w-9 rounded-md border px-3 py-1.5 text-sm
+                                text-gray-600 hover:bg-gray-50"
+                    >
+                      {totalPages}
+                    </button>
+                  </>
+                )}
+
+                {/* Next */}
+                <button
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="rounded-md border px-3 py-1.5 text-sm
+                            hover:bg-gray-50
+                            disabled:cursor-not-allowed
+                            disabled:opacity-40"
+                >
+                  →
+                </button>
+
+              </div>
+
+              
             </div>
         </div>
     )}

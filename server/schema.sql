@@ -68,6 +68,9 @@ CREATE TABLE IF NOT EXISTS cart_items(
 );
 CREATE INDEX IF NOT EXISTS idx_cart_items ON cart_items(cart_id);
 
+ALTER TABLE cart_items ADD COLUMN kot_qty INT NOT NULL DEFAULT 0;
+
+
 --customer
 CREATE TABLE IF NOT EXISTS customers(
   id      SERIAL PRIMARY KEY,

@@ -8,7 +8,13 @@ export default function CustomerModal({ order, total, onSkip, onSubmit, saving }
   const [name, setName] = useState('');
   const [mobile, setMobile] = useState('');
   const [email, setEmail] = useState('');
+  const [paymentMode,setPaymentMode] = useState('');
+  const [cash,setCash] = useState('');
+  const [online,setOnline] = useState('');
   const [error, setError] = useState('');
+
+  const paymentModes = ['Cash','Online','Split'];
+  
 
   const submit = (e) => {
     e.preventDefault();
@@ -16,7 +22,7 @@ export default function CustomerModal({ order, total, onSkip, onSubmit, saving }
     if (digits && digits.length !== 10) return setError('Mobile must be 10 digits.');
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setError('Enter a valid email.');
     setError('');
-    onSubmit({ name: name.trim(), mobile: digits, email: email.trim() });
+    onSubmit({ name: name.trim(), mobile: digits, email: email.trim(),cash:cash,online:online,order:order,total:total });
   };
 
   const field =
@@ -59,12 +65,44 @@ export default function CustomerModal({ order, total, onSkip, onSubmit, saving }
           <input
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            type="email"
-            inputMode="email"
-            placeholder="name@example.com"
+            inputMode="string"
+            placeholder="darshan@gmail.com"
             className={field}
           />
         </label>
+        <label className="block">
+          <span className="text-sm text-gray-600">Payment Mode</span>
+          <select onChange={(e) => setPaymentMode(e.target.value)} className={field} value={paymentMode}>
+            <option value="">Please Select Payment Mode</option>
+            {paymentModes.map((pm) => (
+              <option value={pm} key={pm}>{pm}</option>
+            ))}
+          </select>
+        </label>
+
+        {paymentMode && (paymentMode.toLowerCase() === 'cash' || paymentMode.toLowerCase() === 'split') && (<label className="block">
+          <span className="text-sm text-gray-600">Cash</span>
+          <input
+            value={cash}
+            onChange={(e) => setCash(e.target.value)}
+            type="number"
+            placeholder=""
+            className={field}
+          />
+        </label>)}
+
+        {paymentMode && (paymentMode.toLowerCase() == 'online' || paymentMode.toLowerCase() == 'split') && (<label className="block">
+          <span className="text-sm text-gray-600">Online</span>
+          <input
+            value={online}
+            onChange={(e) => setOnline(e.target.value)}
+            type="number"
+            inputMode="number"
+            placeholder=""
+            className={field}
+          />
+        </label>)}
+        
 
         <div className="grid grid-cols-2 gap-2 pt-1">
           <button

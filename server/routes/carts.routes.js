@@ -10,7 +10,7 @@ router.get('/', async (_req, res) => {
 
   const ids = carts.map((c) => c.id);
   const [items] = await db.query(
-    `SELECT ci.cart_id AS cref, ci.product_id AS id, p.name, ci.price, p.image, ci.qty
+    `SELECT ci.cart_id AS cref, ci.product_id AS id, p.name, ci.price, p.image, ci.qty,ci.kot_qty
      FROM cart_items ci
      JOIN products p ON p.id = ci.product_id
      WHERE ci.cart_id = ANY(?)
@@ -26,6 +26,8 @@ router.get('/', async (_req, res) => {
       price: Number(it.price),
       image: it.image,
       qty: it.qty,
+      kotQty: it.kot_qty
+
     });
   }
 
@@ -37,6 +39,8 @@ router.get('/', async (_req, res) => {
 // Replaces every stored cart in one transaction so the DB always mirrors the client.
 router.put('/', async (req, res) => {
   const carts = Array.isArray(req.body?.carts) ? req.body.carts : [];
+
+  
   const client = await db.pool.connect();
   try {
     await client.query('BEGIN');
@@ -54,10 +58,11 @@ router.put('/', async (req, res) => {
       );
       const cid = r.rows[0].id;
 
+
       for (const it of list) {
         await client.query(
-          'INSERT INTO cart_items (cart_id, product_id, price, qty) VALUES ($1, $2, $3, $4)',
-          [cid, Number(it.id), Number(it.price), Number(it.qty)]
+          'INSERT INTO cart_items (cart_id, product_id, price, qty, kot_qty) VALUES ($1, $2, $3, $4,$5)',
+          [cid, Number(it.id), Number(it.price), Number(it.qty),Number(it.kotQty)]
         );
       }
     }

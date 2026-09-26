@@ -104,9 +104,18 @@ router.post('/:id/customer', async (req, res) => {
     return res.status(400).json({ error: 'invalid order id' });
   }
 
-  let { name, mobile, email } = req.body || {};
+ let { name, mobile, email, cash, online, total } = req.body || {};
   name = (typeof name === 'string' && name.trim()) || null;
   email = (typeof email === 'string' && email.trim()) || null;
+
+  // Payment amounts: blank/undefined -> 0, must be valid non-negative numbers.
+  const toAmount = (v) => (v === undefined || v === null || v === '' ? 0 : Number(v));
+  const cashAmt = toAmount(cash);
+  const onlineAmt = toAmount(online);
+  const totalAmt = toAmount(total);
+  if ([cashAmt, onlineAmt, totalAmt].some((n) => !Number.isFinite(n) || n < 0)) {
+    return res.status(400).json({ error: 'invalid payment amount' });
+  }
 
   // Mobile: optional; if provided it must be exactly 10 digits (matches the DB CHECK).
   let mobileNum = null;
@@ -118,20 +127,33 @@ router.post('/:id/customer', async (req, res) => {
     mobileNum = Number(rawMobile);
   }
 
+    const client = await db.pool.connect();
   try {
-    // Make sure the order exists before linking a customer to it.
-    const [orders] = await db.query('SELECT id FROM orders WHERE id = ?', [orderId]);
-    if (!orders.length) return res.status(404).json({ error: 'order not found' });
+    const o = await client.query('SELECT id, total FROM orders WHERE id = $1', [orderId]);
+    if (!o.rows.length) return res.status(404).json({ error: 'order not found' });
 
-    const [rows] = await db.query(
+    await client.query('BEGIN');
+
+    const c = await client.query(
       `INSERT INTO customers (order_id, customer_name, customer_mobile, customer_email)
-       VALUES (?, ?, ?, ?) RETURNING id`,
+       VALUES ($1, $2, $3, $4) RETURNING id`,
       [orderId, name, mobileNum, email]
     );
-    res.status(201).json({ id: rows[0].id, order_id: orderId });
+
+    await client.query(
+      `INSERT INTO payment (order_id, amount, cash, online, status)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [orderId, totalAmt || Number(o.rows[0].total), cashAmt, onlineAmt, 'Completed']
+    );
+
+    await client.query('COMMIT');
+    res.status(201).json({ id: c.rows[0].id, order_id: orderId });
   } catch (error) {
+    await client.query('ROLLBACK').catch(() => {});
     console.error('Attach customer failed:', error);
     res.status(500).json({ error: error.message || 'Failed to save customer' });
+  } finally {
+    client.release();
   }
 });
 

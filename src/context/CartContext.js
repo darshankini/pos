@@ -14,8 +14,8 @@ function initState() {
 // Add/merge a product into an items array (single-cart logic, unchanged).
 function addItem(items, p) {
   const existing = items.find((i) => i.id === p.id);
-  if (existing) return items.map((i) => (i.id === p.id ? { ...i, qty: i.qty + 1 } : i));
-  return [...items, { id: p.id, name: p.name, price: Number(p.price), image: p.image, qty: 1 }];
+  if (existing) return items.map((i) => (i.id === p.id ? { ...i, qty: i.qty + 1,kotQty:i.qty + 1 } : i));
+  return [...items, { id: p.id, name: p.name, price: Number(p.price), image: p.image, qty: 1,kotQty:1 }];
 }
 
 function reducer(state, action) {
@@ -29,13 +29,16 @@ function reducer(state, action) {
     case 'add':
       return updateActive((items) => addItem(items, action.product));
     case 'inc':
-      return updateActive((items) => items.map((i) => (i.id === action.id ? { ...i, qty: i.qty + 1 } : i)));
+      return updateActive((items) => items.map((i) => (i.id === action.id ? { ...i, qty: i.qty + 1,kotQty:i.kotQty + 1 } : i)));
     case 'dec':
       return updateActive((items) =>
-        items.map((i) => (i.id === action.id ? { ...i, qty: i.qty - 1 } : i)).filter((i) => i.qty > 0)
+        items.map((i) => (i.id === action.id ? { ...i, qty: i.qty - 1,kotQty:i.kotQty - 1 } : i)).filter((i) => i.qty > 0)
       );
     case 'remove':
       return updateActive((items) => items.filter((i) => i.id !== action.id));
+    case 'kot':
+      return updateActive((items) => items.map((i) => ({...i,kotQty:0}))
+    );
     case 'clear':
       return updateActive(() => []);
 
@@ -100,12 +103,14 @@ export function CartProvider({ children }) {
     syncingRef.current = true;
     try {
       const s = stateRef.current;
+
       await api.put('/carts', {
         carts: s.carts.map((c) => ({
           cart_id: c.id,
-          items: c.items.map((i) => ({ id: i.id, price: i.price, qty: i.qty })),
+          items: c.items.map((i) => ({ id: i.id, price: i.price, qty: i.qty,kotQty: i.kotQty })),
         })),
       });
+
     } catch (e) {
       console.error('cart sync failed', e);
     } finally {
@@ -132,6 +137,7 @@ export function CartProvider({ children }) {
   const dec = useCallback((id) => dispatch({ type: 'dec', id }), []);
   const remove = useCallback((id) => dispatch({ type: 'remove', id }), []);
   const clear = useCallback(() => dispatch({ type: 'clear' }), []);
+  const kot = useCallback(() => dispatch({type: 'kot' }), []);
 
   // Session operations.
   const addSession = useCallback(() => dispatch({ type: 'newSession' }), []);
@@ -160,9 +166,9 @@ export function CartProvider({ children }) {
   const value = useMemo(
     () => ({
       items, add, inc, dec, remove, clear, total, count,
-      sessions, activeId: state.activeId, addSession, selectSession, clearSessions,
+      sessions, activeId: state.activeId, addSession, selectSession, clearSessions,kot
     }),
-    [items, add, inc, dec, remove, clear, total, count, sessions, state.activeId, addSession, selectSession, clearSessions]
+    [items, add, inc, dec, remove, clear, total, count, sessions, state.activeId, addSession, selectSession, clearSessions,kot]
   );
   return <CartCtx.Provider value={value}>{children}</CartCtx.Provider>;
 }

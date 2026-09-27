@@ -91,7 +91,7 @@ export default function CustomerModal({ order, total, onSkip, onSubmit, saving }
           />
         </label>)}
 
-        {paymentMode && (paymentMode.toLowerCase() == 'online' || paymentMode.toLowerCase() == 'split') && (<label className="block">
+        {paymentMode && (paymentMode.toLowerCase() === 'online' || paymentMode.toLowerCase() === 'split') && (<label className="block">
           <span className="text-sm text-gray-600">Online</span>
           <input
             value={online}

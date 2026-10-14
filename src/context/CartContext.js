@@ -51,6 +51,16 @@ function reducer(state, action) {
       return state.carts.some((c) => c.id === action.id) ? { ...state, activeId: action.id } : state;
     case 'resetSessions': // delete/clear ALL sessions -> back to a single empty cart
       return initState();
+    case 'clearCurrentSession':
+      return {
+        ...state,
+        carts: state.carts.map((c) =>
+          c.id === action.id
+            ? { ...c, items: [] }
+            : c
+        ),
+      };
+    // return state.carts.filter((c) => c.id === action.id) ? {}
 
     case 'hydrate': {
       // Rehydrate from the DB. action.carts: [{ cart_id, items:[{id,name,price,image,qty}] }].
@@ -128,6 +138,7 @@ export function CartProvider({ children }) {
     return () => clearTimeout(t);
   }, [state, loaded, doSync]);
 
+
   const active = state.carts.find((c) => c.id === state.activeId) || state.carts[0];
   const items = active.items;
 
@@ -143,6 +154,7 @@ export function CartProvider({ children }) {
   const addSession = useCallback(() => dispatch({ type: 'newSession' }), []);
   const selectSession = useCallback((id) => dispatch({ type: 'selectSession', id }), []);
   const clearSessions = useCallback(() => dispatch({ type: 'resetSessions' }), []);
+  const clearCurrentSession = useCallback((id) => dispatch({type: 'clearCurrentSession', id}), []);
 
   const { total, count } = useMemo(
     () => ({
@@ -166,9 +178,9 @@ export function CartProvider({ children }) {
   const value = useMemo(
     () => ({
       items, add, inc, dec, remove, clear, total, count,
-      sessions, activeId: state.activeId, addSession, selectSession, clearSessions,kot
+      sessions, activeId: state.activeId, addSession, selectSession, clearSessions,kot,clearCurrentSession
     }),
-    [items, add, inc, dec, remove, clear, total, count, sessions, state.activeId, addSession, selectSession, clearSessions,kot]
+    [items, add, inc, dec, remove, clear, total, count, sessions, state.activeId, addSession, selectSession, clearSessions,kot,clearCurrentSession]
   );
   return <CartCtx.Provider value={value}>{children}</CartCtx.Provider>;
 }

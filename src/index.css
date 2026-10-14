@@ -24,4 +24,21 @@ body { @apply bg-gray-100 text-gray-800; }
     color: #000;
   }
   @page { size: 58mm auto; margin: 0; }
+
+  /* KOT preview modal: print only the ticket. position:fixed lifts it out of
+     the modal's scroll/overflow containers so it isn't clipped. */
+  #kot-print, #kot-print * { visibility: visible; }
+  #kot-print {
+    position: fixed;
+    left: 0; top: 0;
+    width: 58mm;
+    max-width: none;
+    margin: 0;
+    padding: 2mm;
+    box-shadow: none;
+    font-size: 11px;
+  }
+  #kot-print textarea { color: #000; border: none; resize: none; }
+  /* While the KOT is open, don't also print a leftover receipt underneath it. */
+  body:has(#kot-print) .receipt-print { display: none; }
 }

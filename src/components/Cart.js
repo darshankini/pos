@@ -10,7 +10,7 @@ import Kot from './Kot';
 export default function Cart({ onClose }) {
   const {
     items, inc, dec, remove, clear, total, count,
-    sessions, activeId, addSession, selectSession, clearSessions,kot
+    sessions, activeId, addSession, selectSession, clearSessions,kot,clearCurrentSession
   } = useCart();
   const [busy, setBusy] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -29,6 +29,12 @@ export default function Cart({ onClose }) {
     if (hasStuff && !window.confirm('Clear all carts? This removes every cart session.')) return;
     clearSessions();
   }, [sessions, clearSessions]);
+
+  const handleClearCurrentSession = useCallback((id) => {
+    const hasStuff = sessions.some((s) => s.id === id && s.count > 0);
+    if(hasStuff &&!window.confirm('Are you sure you want to clear the current cart?')) return;
+    clearCurrentSession(id);
+  },[sessions,clearCurrentSession])
 
   // Step 1: create + save the order, then open the customer modal (order is saved either way).
   const checkout = useCallback(async () => {
@@ -60,6 +66,8 @@ export default function Cart({ onClose }) {
     [pending, clear]
   );
 
+
+
   // Step 2a: customer skipped — just print.
   const skipCustomer = useCallback(() => finishAndPrint(null), [finishAndPrint]);
 
@@ -82,8 +90,8 @@ export default function Cart({ onClose }) {
 
   const printKot = useCallback(()=>{
     setKotData(kotItems);
-    setKotPrint(!kotPrint);
-  },[kotItems,kotPrint]);
+    setKotPrint(true);
+  },[kotItems]);
 
 
   useEffect(()=>{
@@ -112,6 +120,7 @@ export default function Cart({ onClose }) {
                 (s.id === activeId ? 'bg-brand text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
               }
             >
+              <div className='flex items-center'>
               {s.label}
               {s.count > 0 && (
                 <span
@@ -123,6 +132,22 @@ export default function Cart({ onClose }) {
                   {s.count}
                 </span>
               )}
+              <span
+                title="Clear current carts"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleClearCurrentSession(s.id);
+                }}
+                aria-label="Clear current carts"
+                className={`ml-1.5 rounded-md `+ (s.id === activeId ? 'text-white-500 hover:bg-white-50' : 'text-red-500 hover:bg-red-50')}
+              >
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6" />
+                  <path d="M10 11v6M14 11v6" />
+                </svg>
+              </span>
+              </div>
+
             </button>
           ))}
         </div>
@@ -236,6 +261,7 @@ export default function Cart({ onClose }) {
         onPrint={() => {
           window.print();
           setKotData(null);
+          setKotPrint(false);
           kot()
         }}/>
       )}
